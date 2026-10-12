@@ -7,7 +7,7 @@
 
 extern "C" {
 volatile uint32_t stop_flag = 1;
-volatile uint32_t control_mode = CONTROL_POSITION;
+volatile uint32_t control_mode = CONTROL_FEEDFORWARD;
 volatile uint32_t zero_request = 0;
 volatile uint32_t zero_valid = 0;
 volatile uint32_t pid_reset_request = 0;
@@ -62,7 +62,6 @@ PID position_pid(0, 0, 0, 0, 0, 0);
 PID speed_pid(0, 0, 0, 0, 0, 0);
 volatile uint32_t last_feedback_tick = 0;
 volatile bool received_feedback = false;
-volatile bool feedback_restarted = false;
 float zero_offset_deg = 0.0f;
 uint32_t previous_mode = 0;
 bool was_running = false;
@@ -73,15 +72,6 @@ uint32_t trace_start_cycles = 0;
 
 float clamp(float value, float limit) {
     return value < -limit ? -limit : (value > limit ? limit : value);
-}
-
-bool validParameters(const volatile PidParameters &params) {
-    return isfinite(params.kp) && params.kp >= 0 &&
-           isfinite(params.ki) && params.ki >= 0 &&
-           isfinite(params.kd) && params.kd >= 0 &&
-           isfinite(params.i_max) && params.i_max >= 0 &&
-           isfinite(params.d_filter_k) && params.d_filter_k >= 0 &&
-           params.d_filter_k < 1;
 }
 
 void configurePid(PID &pid, const volatile PidParameters &params, float limit) {
@@ -99,7 +89,11 @@ void sendCurrent(float current) {
     if (HAL_CAN_IsTxMessagePending(&hcan1, mailboxes)) {
         HAL_CAN_AbortTxRequest(&hcan1, mailboxes);
     }
-    if (stop_flag != 0 || fault_flags != 0) current = 0.0f;
+    float limit = current_limit_a;
+    if (!isfinite(limit) || limit < 0) limit = 0;
+    if (limit > MotorConfig::maximum_current_a) limit = MotorConfig::maximum_current_a;
+    if (!isfinite(current) || stop_flag != 0) current = 0.0f;
+    current = clamp(current, limit);
     command_current_a = current;
     int16_t raw = static_cast<int16_t>(current * MotorConfig::direction *
                                       MotorConfig::command_units_per_amp);
@@ -120,8 +114,6 @@ void sendCurrent(float current) {
         ++tx_count;
     } else {
         ++tx_error_count;
-        stop_flag = 1;
-        fault_flags |= FAULT_CAN;
         command_current_a = 0;
         command_current_raw = 0;
         HAL_CAN_AbortTxRequest(&hcan1, mailboxes);
@@ -167,8 +159,6 @@ void controlStep() {
     __disable_irq();
     bool received = received_feedback;
     uint32_t feedback_tick = last_feedback_tick;
-    bool restarted = feedback_restarted;
-    feedback_restarted = false;
     float motor_angle = motor.angle();
     actual_speed_deg_s = motor.speed();
     encoder_raw = motor.encoder();
@@ -177,13 +167,8 @@ void controlStep() {
     __set_PRIMASK(interrupt_state);
     feedback_age_ms = received ? now - feedback_tick : UINT32_MAX;
     feedback_online = received && feedback_age_ms < MotorConfig::feedback_timeout_ms;
-    if (!feedback_online || restarted) {
-        zero_valid = 0;
-        stop_flag = 1;
-    }
     if (zero_request != 0) {
-        if (stop_flag != 0 && feedback_online != 0 &&
-            fabsf(actual_speed_deg_s) < 5.0f) {
+        if (stop_flag != 0) {
             zero_offset_deg = motor_angle;
             zero_valid = 1;
             target_angle_deg = 0;
@@ -194,40 +179,17 @@ void controlStep() {
     }
     actual_angle_deg = motor_angle - zero_offset_deg;
     can_error = HAL_CAN_GetError(&hcan1);
-    uint32_t faults = 0;
-    if (!feedback_online) faults |= FAULT_FEEDBACK;
-    if (!zero_valid) faults |= FAULT_ZERO;
-    if (zero_valid && fabsf(actual_angle_deg) > MotorConfig::angle_limit_deg)
-        faults |= FAULT_ANGLE;
-    if (MotorConfig::has_temperature &&
-        motor_temperature_c >= MotorConfig::temperature_limit_c)
-        faults |= FAULT_TEMPERATURE;
-    if ((hcan1.Instance->ESR & CAN_ESR_BOFF) != 0) faults |= FAULT_CAN;
-    if (!isfinite(target_angle_deg) ||
-        fabsf(target_angle_deg) > MotorConfig::angle_limit_deg ||
-        !isfinite(target_speed_deg_s) || !isfinite(manual_current_a) ||
-        !isfinite(current_limit_a) || current_limit_a <= 0 ||
-        current_limit_a > MotorConfig::maximum_current_a ||
-        !isfinite(speed_limit_deg_s) || speed_limit_deg_s <= 0 ||
-        !isfinite(ff_peak_current_a) || ff_peak_current_a < 0 ||
-        ff_peak_current_a > MotorConfig::maximum_current_a ||
-        !isfinite(ff_scale) || fabsf(ff_scale) > 3.0f ||
-        !validParameters(position_pid_params) || !validParameters(speed_pid_params) ||
-        control_mode < CONTROL_CURRENT || control_mode > CONTROL_POSITION)
-        faults |= FAULT_PARAMETER;
-    fault_flags = faults;
-    if (faults != 0) stop_flag = 1;
+    fault_flags = 0;
     if (pid_reset_request != 0 || previous_mode != control_mode) {
         resetPid();
         pid_reset_request = 0;
     }
     previous_mode = control_mode;
-    bool running = stop_flag == 0 && faults == 0;
+    bool running = stop_flag == 0;
     if (step_request != 0) {
         float next_target = target_angle_deg + step_delta_deg;
         if (running && control_mode == CONTROL_POSITION &&
-            isfinite(step_delta_deg) && step_delta_deg != 0 &&
-            fabsf(next_target) <= MotorConfig::angle_limit_deg) {
+            isfinite(next_target) && isfinite(step_delta_deg) && step_delta_deg != 0) {
             target_angle_deg = next_target;
             trace_target = next_target;
             trace_direction = step_delta_deg > 0 ? 1.0f : -1.0f;
@@ -277,8 +239,6 @@ void controlStep() {
         output += pid_current_a;
     }
     if (!isfinite(output)) {
-        stop_flag = 1;
-        fault_flags |= FAULT_PARAMETER;
         resetPid();
         output = 0;
     }
@@ -326,15 +286,9 @@ extern "C" void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *handle) {
             continue;
         }
         uint32_t now = HAL_GetTick();
-        bool restart = received_feedback &&
-            now - last_feedback_tick >= MotorConfig::feedback_timeout_ms;
-        if (!motor.receive(data, restart)) {
+        if (!motor.receive(data, false)) {
             ++rx_invalid_count;
             continue;
-        }
-        if (restart) {
-            feedback_restarted = true;
-            stop_flag = 1;
         }
         received_feedback = true;
         last_feedback_tick = now;
