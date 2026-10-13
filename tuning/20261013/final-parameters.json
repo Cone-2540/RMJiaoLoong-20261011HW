@@ -1,0 +1,41 @@
+{
+  "motor": "M2006",
+  "esc": "C610",
+  "motor_id": 1,
+  "can": "CAN1",
+  "ff_scale": 1.4,
+  "ff_enable": 1,
+  "ff_peak_current_a": 0.35425,
+  "inner": {
+    "kp": 0.08,
+    "ki": 0,
+    "kd": 0.5,
+    "d_filter_k": 0.8,
+    "i_max": 1000
+  },
+  "outer": {
+    "kp": 110,
+    "ki": 0,
+    "kd": 900,
+    "d_filter_k": 0.3,
+    "i_max": 1000
+  },
+  "current_limit_a": 6,
+  "speed_limit_deg_s": 600,
+  "acceptance_degrees": [
+    0,
+    10
+  ],
+  "settling_ms": [
+    65,
+    61,
+    93,
+    96,
+    93,
+    90,
+    77,
+    93
+  ],
+  "status": "10-degree step verified; physical videos pending",
+  "flashed": false
+}

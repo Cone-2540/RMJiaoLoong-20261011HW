@@ -30,3 +30,6 @@
 __pycache__/
 .DS_Store
 Thumbs.db
+/tuning/20261013/*.json
+!/tuning/20261013/final-parameters.json
+!/tuning/20261013/monitor-flow.json

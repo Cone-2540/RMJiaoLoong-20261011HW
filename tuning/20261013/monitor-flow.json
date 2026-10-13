@@ -1,0 +1,1113 @@
+[
+  {
+    "id": "7b9ed63e.2138f8",
+    "type": "tab",
+    "label": "Basic_Flow",
+    "disabled": false,
+    "info": "# Basic flow to start with STM32CubeMonitor."
+  },
+  {
+    "id": "8381c865.236028",
+    "type": "subflow",
+    "name": "Single value",
+    "info": "The 'single value' subflow allows to extract data from processing node.\r\n\r\n * Filter Data to extract only one variable after the \"processing node\" step .\r\n * Modify the message to fit with standard widgets such as gauges.\r\n * Limit the number of messages to a maximum of 10 msg per second.\r\n\r\n### **Input**\r\n\r\nThe subflow 'single value' takes in input the `msg.payload`\r\nfrom the processing output. All the messages sent by the processing node have the same structure.\r\n\r\n    \"payload\": {\r\n        \"groupname\": \"Snapshot2\",\r\n        \"variabledata\": [\r\n            {\r\n                \"y\": \"9\",\r\n                \"x\": \"1567509421459\"\r\n            },\r\n            {\r\n                \"y\": \"9\",\r\n                \"x\": \"1567509421459\"\r\n            },\r\n            {\r\n                \"y\": \"9\",\r\n                \"x\": \"1567509421459\"\r\n            }\r\n        ],\r\n        \"variablename\": \"int2\"\r\n      }\r\n    }\r\n\r\n### **Filter on selected variable**\r\nSeveral messages are sent by the processing node for each variable, so the first step of this 'single value' subflow is to filter and keep only messages related to the selected variable.\r\nThe 'filter variable' node will only keep messages with the right `variablename` key.\r\n\r\n### **Extract duplets table**\r\n\r\nThe received message is an Object containing {groupname, variabledata[array], variablename}.  \r\nThe array contains two variables :\r\n - `y` the value \r\n - `x` the time\r\n\r\nA single message contains multiple pairs of values extract at a regular time interval.\r\nThe time interval depends on the acquisition frequency.\r\nWith the 'change' node and the `set` property, the `msg.payload` is set to \r\n`msg.payload.variabledata`, only the data variable array is set into msg.payload.\r\n\r\n    \"payload\": {\r\n        \"variabledata\": [\r\n            {\r\n                \"y\": \"9\",\r\n                \"x\": \"1567509421459\"\r\n            },\r\n            {\r\n                \"y\": \"9\",\r\n                \"x\": \"1567509421459\"\r\n            },\r\n            {\r\n                \"y\": \"9\",\r\n                \"x\": \"1567509421459\"\r\n            }\r\n        ]\r\n    }\r\n\r\n### **Split duplets table**\r\n\r\nThe data variable array is split with a length of one in smaller objects by the 'split' node.\r\nEach new object contains two subvariables : `y` and `x`.\r\n\r\n    \"payload\": {\r\n        \"y\": \"9\",\r\n        \"x\": \"1567509421459\"\r\n    }\r\n\r\n\r\n### **Limit the number of messages**\r\n\r\nThe 'delay' node allows to limit the maximum number of message per second.\r\nIn the 'single value' subflow, one message is extracted per second.\r\n\r\n>_Be careful, a dashboard saturation risk exists if too many messages are received per second._\r\n\r\n### **Extract only y values**\r\n\r\nThe `msg.payload` is set to `msg.payload.y` with the `set` property. \r\nOnly `y` variable is set into msg.payload as single value.\r\n\r\n    \"payload\": { \r\n        \"y\": \"9\" \r\n    }\r\n\r\n### **Output** \r\n\r\nSome widgets such as the gauge and the text node are using the `msg.payload` property.  \r\nThe output node is linked to a gauge that allows to see the evolution \r\nof the `y` variable as a function of time.\r\n\r\n\r\n![subflow_gauge](images/subflow_gauge.png)\r\n\r\n### **Details**\r\n\r\nNote : The debug node allows to see clearly and easily the \r\nmessage at the node output.  \r\n\r\n\r\n> More details on : [Node-Red](https://nodered.org/docs/user-guide/editor/workspace/subflows)\r\n\r\n\r\n-------\r\n\r\n",
+    "category": "",
+    "in": [
+      {
+        "x": 40,
+        "y": 60,
+        "wires": [
+          {
+            "id": "3c5ffe0d.9063b2"
+          }
+        ]
+      }
+    ],
+    "out": [
+      {
+        "x": 780,
+        "y": 140,
+        "wires": [
+          {
+            "id": "66397fd3.d8111",
+            "port": 0
+          }
+        ]
+      }
+    ],
+    "env": [
+      {
+        "name": "varfilter",
+        "type": "str",
+        "value": "",
+        "ui": {
+          "icon": "font-awesome/fa-filter",
+          "label": {
+            "en-US": "Variable"
+          },
+          "type": "input",
+          "opts": {
+            "types": [
+              "str"
+            ]
+          }
+        }
+      }
+    ],
+    "color": "#3CB4E6"
+  },
+  {
+    "id": "17d09b07.741a55",
+    "type": "ui_tab",
+    "name": "Home",
+    "icon": "dashboard",
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "22293a40.207896",
+    "type": "ui_base",
+    "theme": {
+      "name": "theme-light",
+      "lightTheme": {
+        "default": "#0094CE",
+        "baseColor": "#0094CE",
+        "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif",
+        "edited": false
+      },
+      "darkTheme": {
+        "default": "#097479",
+        "baseColor": "#097479",
+        "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif",
+        "edited": false
+      },
+      "customTheme": {
+        "name": "Untitled Theme 1",
+        "default": "#4B7930",
+        "baseColor": "#4B7930",
+        "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif"
+      },
+      "themeState": {
+        "base-color": {
+          "default": "#0094CE",
+          "value": "#0094CE",
+          "edited": false
+        },
+        "page-titlebar-backgroundColor": {
+          "value": "#0094CE",
+          "edited": false
+        },
+        "page-backgroundColor": {
+          "value": "#fafafa",
+          "edited": false
+        },
+        "page-sidebar-backgroundColor": {
+          "value": "#ffffff",
+          "edited": false
+        },
+        "group-textColor": {
+          "value": "#1bbfff",
+          "edited": false
+        },
+        "group-borderColor": {
+          "value": "#ffffff",
+          "edited": false
+        },
+        "group-backgroundColor": {
+          "value": "#ffffff",
+          "edited": false
+        },
+        "widget-textColor": {
+          "value": "#111111",
+          "edited": false
+        },
+        "widget-backgroundColor": {
+          "value": "#0094ce",
+          "edited": false
+        },
+        "widget-borderColor": {
+          "value": "#ffffff",
+          "edited": false
+        },
+        "base-font": {
+          "value": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif"
+        }
+      },
+      "angularTheme": {
+        "primary": "indigo",
+        "accents": "blue",
+        "warn": "red",
+        "background": "grey"
+      }
+    },
+    "site": {
+      "name": "Node-RED Dashboard",
+      "hideToolbar": "false",
+      "allowSwipe": "false",
+      "lockMenu": "false",
+      "allowTempTheme": "true",
+      "dateFormat": "DD/MM/YYYY",
+      "sizes": {
+        "sx": 48,
+        "sy": 48,
+        "gx": 6,
+        "gy": 6,
+        "cx": 6,
+        "cy": 6,
+        "px": 0,
+        "py": 0
+      }
+    }
+  },
+  {
+    "id": "f9c34dde.1e2f4",
+    "type": "ui_group",
+    "name": "Chart",
+    "tab": "17d09b07.741a55",
+    "order": 1,
+    "disp": true,
+    "width": 15,
+    "collapse": false
+  },
+  {
+    "id": "baf772b62ef6d972",
+    "type": "probe",
+    "probeid": "32FF72063447353729312457",
+    "probename": "ST-Link v2 32FF72063447353729312457",
+    "protocol": "SWD",
+    "frequency": "1.8 MHz - Default",
+    "probeproperty": "{\"SWD\":[\"4.6 MHz\",\"1.8 MHz - Default\",\"950 kHz\",\"400 kHz\",\"150 kHz\"],\"JTAG\":[\"18 MHz\",\"9 MHz\",\"4.5 MHz\",\"2.25 MHz\",\"1.12 MHz - Default\",\"560 kHz\",\"280 kHz\",\"140 kHz\"]}",
+    "probeversion": "ST Link firmware version V2.J45",
+    "connectionType": "p2p",
+    "nickname": ""
+  },
+  {
+    "id": "20046ef6500fdbcb",
+    "type": "exe-config",
+    "name": "PID",
+    "exefile": "D:\\RM\\codes\\261011_PID\\MDK-ARM\\261011_PID\\261011_PID.axf",
+    "exefolder": "D:\\RM\\codes\\261011_PID\\MDK-ARM\\261011_PID\\",
+    "exevariablelist": [
+      {
+        "address": "0x20000150",
+        "name": "actual_angle_deg",
+        "type": 9,
+        "checked": true
+      },
+      {
+        "address": "0x20000154",
+        "name": "actual_speed_deg_s",
+        "type": 9,
+        "checked": true
+      },
+      {
+        "address": "0x080042dc",
+        "name": "AHBPrescTable[0]",
+        "type": 1,
+        "checked": false
+      },
+      {
+        "address": "0x20000158",
+        "name": "angle_error_deg",
+        "type": 9,
+        "checked": true
+      },
+      {
+        "address": "0x2000015c",
+        "name": "can_error",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x20000160",
+        "name": "command_current_a",
+        "type": 9,
+        "checked": true
+      },
+      {
+        "address": "0x20000164",
+        "name": "command_current_raw",
+        "type": 6,
+        "checked": false
+      },
+      {
+        "address": "0x20000168",
+        "name": "control_cycles",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x2000016c",
+        "name": "control_cycles_max",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x2000000c",
+        "name": "control_mode",
+        "type": 5,
+        "checked": true
+      },
+      {
+        "address": "0x20000170",
+        "name": "control_tick_count",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x20000010",
+        "name": "current_limit_a",
+        "type": 9,
+        "checked": true
+      },
+      {
+        "address": "0x20000174",
+        "name": "encoder_raw",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x20000178",
+        "name": "fault_flags",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x20000014",
+        "name": "feedback_age_ms",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x2000017c",
+        "name": "feedback_current_raw",
+        "type": 6,
+        "checked": false
+      },
+      {
+        "address": "0x20000180",
+        "name": "feedback_online",
+        "type": 5,
+        "checked": true
+      },
+      {
+        "address": "0x20000184",
+        "name": "ff_current_a",
+        "type": 9,
+        "checked": true
+      },
+      {
+        "address": "0x20000018",
+        "name": "ff_enable",
+        "type": 5,
+        "checked": true
+      },
+      {
+        "address": "0x2000001c",
+        "name": "ff_peak_current_a",
+        "type": 9,
+        "checked": false
+      },
+      {
+        "address": "0x20000020",
+        "name": "ff_scale",
+        "type": 9,
+        "checked": true
+      },
+      {
+        "address": "0x20000188",
+        "name": "gravity_torque_nm",
+        "type": 9,
+        "checked": false
+      },
+      {
+        "address": "0x200001b0",
+        "name": "hcan1.ErrorCode",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x200001a5",
+        "name": "hcan1.Init.AutoBusOff",
+        "type": 2,
+        "checked": false
+      },
+      {
+        "address": "0x200001a7",
+        "name": "hcan1.Init.AutoRetransmission",
+        "type": 2,
+        "checked": false
+      },
+      {
+        "address": "0x200001a6",
+        "name": "hcan1.Init.AutoWakeUp",
+        "type": 2,
+        "checked": false
+      },
+      {
+        "address": "0x20000194",
+        "name": "hcan1.Init.Mode",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x20000190",
+        "name": "hcan1.Init.Prescaler",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x200001a8",
+        "name": "hcan1.Init.ReceiveFifoLocked",
+        "type": 2,
+        "checked": false
+      },
+      {
+        "address": "0x20000198",
+        "name": "hcan1.Init.SyncJumpWidth",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x2000019c",
+        "name": "hcan1.Init.TimeSeg1",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x200001a0",
+        "name": "hcan1.Init.TimeSeg2",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x200001a4",
+        "name": "hcan1.Init.TimeTriggeredMode",
+        "type": 2,
+        "checked": false
+      },
+      {
+        "address": "0x200001a9",
+        "name": "hcan1.Init.TransmitFifoPriority",
+        "type": 2,
+        "checked": false
+      },
+      {
+        "address": "0x2000018c",
+        "name": "hcan1.Instance",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x200001ac",
+        "name": "hcan1.State",
+        "type": 2,
+        "checked": false
+      },
+      {
+        "address": "0x200001d0",
+        "name": "htim6.Channel",
+        "type": 2,
+        "checked": false
+      },
+      {
+        "address": "0x200001f6",
+        "name": "htim6.ChannelNState[0]",
+        "type": 2,
+        "checked": false
+      },
+      {
+        "address": "0x200001f2",
+        "name": "htim6.ChannelState[0]",
+        "type": 2,
+        "checked": false
+      },
+      {
+        "address": "0x200001fa",
+        "name": "htim6.DMABurstState",
+        "type": 2,
+        "checked": false
+      },
+      {
+        "address": "0x200001d4",
+        "name": "htim6.hdma[0]",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x200001cc",
+        "name": "htim6.Init.AutoReloadPreload",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x200001c4",
+        "name": "htim6.Init.ClockDivision",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x200001bc",
+        "name": "htim6.Init.CounterMode",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x200001c0",
+        "name": "htim6.Init.Period",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x200001b8",
+        "name": "htim6.Init.Prescaler",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x200001c8",
+        "name": "htim6.Init.RepetitionCounter",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x200001b4",
+        "name": "htim6.Instance",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x200001f0",
+        "name": "htim6.Lock",
+        "type": 2,
+        "checked": false
+      },
+      {
+        "address": "0x200001f1",
+        "name": "htim6.State",
+        "type": 2,
+        "checked": false
+      },
+      {
+        "address": "0x200001fc",
+        "name": "manual_current_a",
+        "type": 9,
+        "checked": false
+      },
+      {
+        "address": "0x20000200",
+        "name": "motor_temperature_c",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x20000204",
+        "name": "pid_current_a",
+        "type": 9,
+        "checked": false
+      },
+      {
+        "address": "0x20000208",
+        "name": "pid_reset_request",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x20000034",
+        "name": "position_pid_params.d_filter_k",
+        "type": 9,
+        "checked": false
+      },
+      {
+        "address": "0x20000030",
+        "name": "position_pid_params.i_max",
+        "type": 9,
+        "checked": false
+      },
+      {
+        "address": "0x2000002c",
+        "name": "position_pid_params.kd",
+        "type": 9,
+        "checked": true
+      },
+      {
+        "address": "0x20000028",
+        "name": "position_pid_params.ki",
+        "type": 9,
+        "checked": true
+      },
+      {
+        "address": "0x20000024",
+        "name": "position_pid_params.kp",
+        "type": 9,
+        "checked": true
+      },
+      {
+        "address": "0x2000020c",
+        "name": "rx_count",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x20000210",
+        "name": "rx_invalid_count",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x20000038",
+        "name": "settling_time_ms",
+        "type": 5,
+        "checked": true
+      },
+      {
+        "address": "0x2000003c",
+        "name": "speed_limit_deg_s",
+        "type": 9,
+        "checked": true
+      },
+      {
+        "address": "0x20000050",
+        "name": "speed_pid_params.d_filter_k",
+        "type": 9,
+        "checked": false
+      },
+      {
+        "address": "0x2000004c",
+        "name": "speed_pid_params.i_max",
+        "type": 9,
+        "checked": false
+      },
+      {
+        "address": "0x20000048",
+        "name": "speed_pid_params.kd",
+        "type": 9,
+        "checked": true
+      },
+      {
+        "address": "0x20000044",
+        "name": "speed_pid_params.ki",
+        "type": 9,
+        "checked": true
+      },
+      {
+        "address": "0x20000040",
+        "name": "speed_pid_params.kp",
+        "type": 9,
+        "checked": true
+      },
+      {
+        "address": "0x20000214",
+        "name": "speed_reference_deg_s",
+        "type": 9,
+        "checked": true
+      },
+      {
+        "address": "0x20000054",
+        "name": "step_delta_deg",
+        "type": 9,
+        "checked": true
+      },
+      {
+        "address": "0x20000218",
+        "name": "step_overshoot_deg",
+        "type": 9,
+        "checked": true
+      },
+      {
+        "address": "0x2000021c",
+        "name": "step_request",
+        "type": 5,
+        "checked": true
+      },
+      {
+        "address": "0x20000058",
+        "name": "stop_flag",
+        "type": 5,
+        "checked": true
+      },
+      {
+        "address": "0x20000000",
+        "name": "SystemCoreClock",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x20000220",
+        "name": "target_angle_deg",
+        "type": 9,
+        "checked": true
+      },
+      {
+        "address": "0x20000224",
+        "name": "target_speed_deg_s",
+        "type": 9,
+        "checked": false
+      },
+      {
+        "address": "0x20000228",
+        "name": "trace_count",
+        "type": 5,
+        "checked": true
+      },
+      {
+        "address": "0x20000234",
+        "name": "trace_samples[0].actual_deg",
+        "type": 9,
+        "checked": false
+      },
+      {
+        "address": "0x20000240",
+        "name": "trace_samples[0].current_a",
+        "type": 9,
+        "checked": false
+      },
+      {
+        "address": "0x20000238",
+        "name": "trace_samples[0].error_deg",
+        "type": 9,
+        "checked": false
+      },
+      {
+        "address": "0x20000244",
+        "name": "trace_samples[0].feedforward_a",
+        "type": 9,
+        "checked": false
+      },
+      {
+        "address": "0x2000023c",
+        "name": "trace_samples[0].speed_deg_s",
+        "type": 9,
+        "checked": false
+      },
+      {
+        "address": "0x20000230",
+        "name": "trace_samples[0].target_deg",
+        "type": 9,
+        "checked": false
+      },
+      {
+        "address": "0x2000022c",
+        "name": "trace_samples[0].time_ms",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x200038dc",
+        "name": "trace_state",
+        "type": 5,
+        "checked": true
+      },
+      {
+        "address": "0x200038e0",
+        "name": "tx_count",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x200038e4",
+        "name": "tx_error_count",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x200038e8",
+        "name": "uwTick",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x2000005c",
+        "name": "uwTickFreq",
+        "type": 2,
+        "checked": false
+      },
+      {
+        "address": "0x20000060",
+        "name": "uwTickPrio",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x200038ec",
+        "name": "zero_request",
+        "type": 5,
+        "checked": false
+      },
+      {
+        "address": "0x200038f0",
+        "name": "zero_valid",
+        "type": 5,
+        "checked": true
+      }
+    ],
+    "expand": false,
+    "filename": "261011_PID.axf",
+    "exeModifiedTime": 1791812607431,
+    "configLastUpdate": 1791817582959
+  },
+  {
+    "id": "3c5ffe0d.9063b2",
+    "type": "switch",
+    "z": "8381c865.236028",
+    "name": "filter variable",
+    "property": "payload.variablename",
+    "propertyType": "msg",
+    "rules": [
+      {
+        "t": "eq",
+        "v": "varfilter",
+        "vt": "env"
+      }
+    ],
+    "checkall": "true",
+    "repair": false,
+    "outputs": 1,
+    "x": 170,
+    "y": 60,
+    "wires": [
+      [
+        "4e5ba7a5.14dec8"
+      ]
+    ]
+  },
+  {
+    "id": "4e5ba7a5.14dec8",
+    "type": "change",
+    "z": "8381c865.236028",
+    "name": "keep only table of duplets",
+    "rules": [
+      {
+        "t": "set",
+        "p": "payload",
+        "pt": "msg",
+        "to": "payload.variabledata",
+        "tot": "msg"
+      }
+    ],
+    "action": "",
+    "property": "",
+    "from": "",
+    "to": "",
+    "reg": false,
+    "x": 430,
+    "y": 60,
+    "wires": [
+      [
+        "42bc6ed.5b20d9"
+      ]
+    ]
+  },
+  {
+    "id": "42bc6ed.5b20d9",
+    "type": "split",
+    "z": "8381c865.236028",
+    "name": "Split a table[1..n] of duplets in n msg of single duplet",
+    "splt": "\\n",
+    "spltType": "str",
+    "arraySplt": 1,
+    "arraySpltType": "len",
+    "stream": false,
+    "addname": "",
+    "x": 800,
+    "y": 60,
+    "wires": [
+      [
+        "8b8ddb84.6fb208"
+      ]
+    ]
+  },
+  {
+    "id": "8b8ddb84.6fb208",
+    "type": "delay",
+    "z": "8381c865.236028",
+    "name": "",
+    "pauseType": "rate",
+    "timeout": "5",
+    "timeoutUnits": "seconds",
+    "rate": "10",
+    "nbRateUnits": "1",
+    "rateUnits": "second",
+    "randomFirst": "1",
+    "randomLast": "5",
+    "randomUnits": "seconds",
+    "drop": true,
+    "outputs": 1,
+    "x": 200,
+    "y": 140,
+    "wires": [
+      [
+        "66397fd3.d8111"
+      ]
+    ]
+  },
+  {
+    "id": "66397fd3.d8111",
+    "type": "change",
+    "z": "8381c865.236028",
+    "name": "keep only value and delete timestamp",
+    "rules": [
+      {
+        "t": "set",
+        "p": "payload",
+        "pt": "msg",
+        "to": "payload.y",
+        "tot": "msg"
+      }
+    ],
+    "action": "",
+    "property": "",
+    "from": "",
+    "to": "",
+    "reg": false,
+    "x": 490,
+    "y": 140,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "1ebbb430.dac7dc",
+    "type": "ui_chartst",
+    "z": "7b9ed63e.2138f8",
+    "group": "f9c34dde.1e2f4",
+    "name": "位置外环：目标与实际角度",
+    "order": 4,
+    "width": 15,
+    "height": 9,
+    "chartType": "line",
+    "curveType": "linear",
+    "duration": "10",
+    "ymin": "",
+    "ymax": "",
+    "x": 580,
+    "y": 280,
+    "wires": []
+  },
+  {
+    "id": "6013fb0b.5b7504",
+    "type": "acquisition out",
+    "z": "7b9ed63e.2138f8",
+    "name": "myProbe_Out",
+    "probeconfig": "baf772b62ef6d972",
+    "x": 780,
+    "y": 100,
+    "wires": []
+  },
+  {
+    "id": "4a573fb0.4bc99",
+    "type": "acquisition in",
+    "z": "7b9ed63e.2138f8",
+    "name": "myProbe_In",
+    "probeconfig": "baf772b62ef6d972",
+    "x": 130,
+    "y": 280,
+    "wires": [
+      [
+        "a7c3e070.5a6c"
+      ],
+      []
+    ]
+  },
+  {
+    "id": "d59587ff.cd1748",
+    "type": "variables",
+    "z": "7b9ed63e.2138f8",
+    "groupname": "myVariables",
+    "accesspoint": 0,
+    "execonfig": "20046ef6500fdbcb",
+    "variablelist": [],
+    "triggerstartmode": "manual",
+    "triggername": "actual_speed_deg_s",
+    "triggerthreshold": "30000",
+    "frequency": "",
+    "frequencyType": "0",
+    "snapshotheader": "",
+    "mode": "direct",
+    "lastImportedTime": 1791817583275,
+    "openStatus": true,
+    "x": 330,
+    "y": 120,
+    "wires": [
+      [
+        "6013fb0b.5b7504",
+        "a1947af47a286cf2"
+      ],
+      [
+        "f14d0398.f1861"
+      ]
+    ]
+  },
+  {
+    "id": "fc00295e.79ada8",
+    "type": "ui_button",
+    "z": "7b9ed63e.2138f8",
+    "name": "",
+    "group": "f9c34dde.1e2f4",
+    "order": 3,
+    "width": 5,
+    "height": 1,
+    "passthru": false,
+    "label": "Clear Graphs",
+    "tooltip": "",
+    "color": "",
+    "bgcolor": "",
+    "icon": "",
+    "payload": "",
+    "payloadType": "str",
+    "topic": "clear",
+    "x": 430,
+    "y": 380,
+    "wires": [
+      [
+        "1ebbb430.dac7dc"
+      ]
+    ]
+  },
+  {
+    "id": "5fd51c96.2330e4",
+    "type": "ui_button",
+    "z": "7b9ed63e.2138f8",
+    "name": "",
+    "group": "f9c34dde.1e2f4",
+    "order": 1,
+    "width": 5,
+    "height": 1,
+    "passthru": false,
+    "label": "START Acquisition",
+    "tooltip": "",
+    "color": "",
+    "bgcolor": "",
+    "icon": "",
+    "payload": "",
+    "payloadType": "str",
+    "topic": "start",
+    "x": 110,
+    "y": 80,
+    "wires": [
+      [
+        "d59587ff.cd1748"
+      ]
+    ]
+  },
+  {
+    "id": "52eadfe3.2c8cc",
+    "type": "ui_button",
+    "z": "7b9ed63e.2138f8",
+    "name": "",
+    "group": "f9c34dde.1e2f4",
+    "order": 2,
+    "width": 5,
+    "height": 1,
+    "passthru": true,
+    "label": "STOP Acquisition",
+    "tooltip": "",
+    "color": "",
+    "bgcolor": "",
+    "icon": "",
+    "payload": "",
+    "payloadType": "str",
+    "topic": "stop",
+    "x": 110,
+    "y": 160,
+    "wires": [
+      [
+        "d59587ff.cd1748"
+      ]
+    ]
+  },
+  {
+    "id": "a7c3e070.5a6c",
+    "type": "processing",
+    "z": "7b9ed63e.2138f8",
+    "groupname": "myVariables",
+    "groupid": "d59587ff.cd1748",
+    "expressions": [],
+    "statistics": [],
+    "logmode": "no",
+    "x": 390,
+    "y": 280,
+    "wires": [
+      [
+        "outer-angle-filter",
+        "outer-telemetry"
+      ],
+      []
+    ]
+  },
+  {
+    "id": "f14d0398.f1861",
+    "type": "ui_toast",
+    "z": "7b9ed63e.2138f8",
+    "position": "top right",
+    "displayTime": "3",
+    "highlight": "",
+    "sendall": true,
+    "outputs": 0,
+    "ok": "OK",
+    "cancel": "",
+    "raw": false,
+    "topic": "",
+    "name": "",
+    "x": 530,
+    "y": 160,
+    "wires": []
+  },
+  {
+    "id": "a1947af47a286cf2",
+    "type": "ui_write",
+    "z": "7b9ed63e.2138f8",
+    "group": "f9c34dde.1e2f4",
+    "name": "PID调试",
+    "order": 4,
+    "width": 0,
+    "height": 0,
+    "x": 560,
+    "y": 80,
+    "wires": [
+      [
+        "6013fb0b.5b7504"
+      ]
+    ]
+  },
+  {
+    "id": "outer-telemetry",
+    "type": "ui_template",
+    "z": "7b9ed63e.2138f8",
+    "group": "f9c34dde.1e2f4",
+    "name": "外环调参状态",
+    "order": 5,
+    "width": 15,
+    "height": 1,
+    "format": "<div style=\"padding:8px\">外环调参：图中显示目标角度与实际角度，参数通过下方 WRITE 修改。</div>",
+    "storeOutMessages": false,
+    "fwdInMessages": false,
+    "resendOnRefresh": false,
+    "templateScope": "local",
+    "x": 600,
+    "y": 320,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "outer-angle-filter",
+    "type": "function",
+    "z": "7b9ed63e.2138f8",
+    "name": "只显示目标与实际角度",
+    "func": "return ['actual_angle_deg','target_angle_deg'].includes(msg.payload.variablename) ? msg : null;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 570,
+    "y": 240,
+    "wires": [
+      [
+        "1ebbb430.dac7dc"
+      ]
+    ]
+  }
+]

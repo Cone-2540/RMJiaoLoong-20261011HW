@@ -11,8 +11,8 @@ constexpr uint32_t motor_id = 1;
 constexpr float direction = 1.0f;
 constexpr uint32_t feedback_timeout_ms = 20;
 constexpr float angle_limit_deg = 150.0f;
-constexpr float startup_current_limit_a = 0.5f;
-constexpr float speed_limit_deg_s = 120.0f;
+constexpr float startup_current_limit_a = 6.0f;
+constexpr float speed_limit_deg_s = 600.0f;
 constexpr float temperature_limit_c = 70.0f;
 
 #if MOTOR_MODEL == 2006
