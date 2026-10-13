@@ -8,34 +8,229 @@
   "ff_peak_current_a": 0.35425,
   "inner": {
     "kp": 0.08,
-    "ki": 0,
+    "ki": 0.0003,
     "kd": 0.5,
     "d_filter_k": 0.8,
     "i_max": 1000
   },
   "outer": {
-    "kp": 110,
-    "ki": 0,
-    "kd": 900,
+    "kp": 110.0,
+    "ki": 0.0,
+    "kd": 900.0,
     "d_filter_k": 0.3,
     "i_max": 1000
   },
-  "current_limit_a": 6,
-  "speed_limit_deg_s": 600,
+  "current_limit_a": 6.0,
+  "speed_limit_deg_s": 600.0,
   "acceptance_degrees": [
-    0,
-    10
+    10.0,
+    20.0,
+    30.0,
+    40.0,
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0,
+    110.0,
+    120.0,
+    130.0,
+    140.0,
+    150.0,
+    160.0,
+    170.0,
+    180.0,
+    190.0,
+    200.0,
+    210.0,
+    220.0,
+    230.0,
+    240.0,
+    250.0,
+    260.0,
+    270.0,
+    280.0,
+    290.0,
+    300.0,
+    310.0,
+    320.0,
+    330.0,
+    340.0,
+    350.0,
+    0.0
   ],
   "settling_ms": [
-    65,
-    61,
-    93,
-    96,
-    93,
-    90,
-    77,
-    93
+    84.0,
+    118.0,
+    89.0,
+    95.0,
+    88.0,
+    90.0,
+    96.0,
+    94.0,
+    89.0,
+    90.0,
+    93.0,
+    111.0,
+    95.0,
+    90.0,
+    89.0,
+    97.0,
+    94.0,
+    88.0,
+    83.0,
+    72.0,
+    98.0,
+    78.0,
+    92.0,
+    82.0,
+    81.0,
+    82.0,
+    75.0,
+    79.0,
+    68.0,
+    79.0,
+    78.0,
+    98.0,
+    78.0,
+    68.0,
+    91.0,
+    79.0
   ],
-  "status": "10-degree step verified; physical videos pending",
-  "flashed": false
+  "status": "Selected circle: 34/36 pass; physical videos and Monitor screenshot pending",
+  "flashed": false,
+  "baseline_commit": "662c994",
+  "selected_circle": "circle_integral",
+  "circle_results": [
+    {
+      "group": "circle_baseline",
+      "steps": 36,
+      "passes": 27,
+      "max_settling_ms": 121.0,
+      "failures": [
+        {
+          "start_deg": 40.0,
+          "target_deg": 50.0,
+          "settling_ms": 107.0
+        },
+        {
+          "start_deg": 60.0,
+          "target_deg": 70.0,
+          "settling_ms": 108.0
+        },
+        {
+          "start_deg": 70.0,
+          "target_deg": 80.0,
+          "settling_ms": 121.0
+        },
+        {
+          "start_deg": 80.0,
+          "target_deg": 90.0,
+          "settling_ms": 111.0
+        },
+        {
+          "start_deg": 90.0,
+          "target_deg": 100.0,
+          "settling_ms": 115.0
+        },
+        {
+          "start_deg": 100.0,
+          "target_deg": 110.0,
+          "settling_ms": 110.0
+        },
+        {
+          "start_deg": 110.0,
+          "target_deg": 120.0,
+          "settling_ms": 111.0
+        },
+        {
+          "start_deg": 120.0,
+          "target_deg": 130.0,
+          "settling_ms": 108.0
+        },
+        {
+          "start_deg": 240.0,
+          "target_deg": 250.0,
+          "settling_ms": 105.0
+        }
+      ]
+    },
+    {
+      "group": "circle_cap300",
+      "steps": 36,
+      "passes": 26,
+      "max_settling_ms": 118.0,
+      "failures": [
+        {
+          "start_deg": 30.0,
+          "target_deg": 40.0,
+          "settling_ms": 114.0
+        },
+        {
+          "start_deg": 60.0,
+          "target_deg": 70.0,
+          "settling_ms": 114.0
+        },
+        {
+          "start_deg": 70.0,
+          "target_deg": 80.0,
+          "settling_ms": 116.0
+        },
+        {
+          "start_deg": 80.0,
+          "target_deg": 90.0,
+          "settling_ms": 118.0
+        },
+        {
+          "start_deg": 90.0,
+          "target_deg": 100.0,
+          "settling_ms": 116.0
+        },
+        {
+          "start_deg": 130.0,
+          "target_deg": 140.0,
+          "settling_ms": 116.0
+        },
+        {
+          "start_deg": 230.0,
+          "target_deg": 240.0,
+          "settling_ms": 110.0
+        },
+        {
+          "start_deg": 250.0,
+          "target_deg": 260.0,
+          "settling_ms": 112.0
+        },
+        {
+          "start_deg": 270.0,
+          "target_deg": 280.0,
+          "settling_ms": 108.0
+        },
+        {
+          "start_deg": 320.0,
+          "target_deg": 330.0,
+          "settling_ms": 106.0
+        }
+      ]
+    },
+    {
+      "group": "circle_integral",
+      "steps": 36,
+      "passes": 34,
+      "max_settling_ms": 118.0,
+      "failures": [
+        {
+          "start_deg": 10.0,
+          "target_deg": 20.0,
+          "settling_ms": 118.0
+        },
+        {
+          "start_deg": 110.0,
+          "target_deg": 120.0,
+          "settling_ms": 111.0
+        }
+      ]
+    }
+  ]
 }
